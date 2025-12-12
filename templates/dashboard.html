@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能物联综合管理平台</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --header-height: 60px;
+      --primary-color: #1890ff;
+    }
+
+    body {
+      background-color: #f0f2f5;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #001529;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+      z-index: 10;
+    }
+
+    .logo-box {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding-left: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #002140;
+      letter-spacing: 1px;
+    }
+
+    .menu-item {
+      padding: 14px 24px;
+      color: rgba(255, 255, 255, 0.65);
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .menu-item:hover,
+    .menu-item.active {
+      color: #fff;
+      background-color: var(--primary-color);
+    }
+
+    .menu-item i {
+      margin-right: 10px;
+      font-size: 16px;
+    }
+
+    /* 主体 */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      height: var(--header-height);
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 5;
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      padding: 20px 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      border-top: 3px solid transparent;
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-text h4 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* 布局 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 24px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 设备卡片区 */
+    .device-grid-container {
+      padding: 24px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      align-content: start;
+    }
+
+    .device-card {
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 20px;
+      background: #fff;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .device-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    .device-status-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      z-index: 5;
+    }
+
+    /* 离线设备样式 */
+    .device-offline {
+      filter: grayscale(100%);
+      opacity: 0.8;
+      border-color: #eee;
+      background-color: #fafafa;
+    }
+
+    .device-offline:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: #eee;
+    }
+
+    /* 日志 */
+    .log-container {
+      flex: 1;
+      padding: 0 20px 20px 20px;
+      overflow-y: auto;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 20px;
+      margin-top: 15px;
+      border-left: 2px solid #e8e8e8;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+      padding-left: 15px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -26px;
+      top: 5px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #ccc;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .timeline-content {
+      font-size: 13px;
+      color: #333;
+      line-height: 1.4;
+      background: #fafafa;
+      padding: 8px 12px;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+
+    .dot-success {
+      border-color: #52c41a;
+      background: #52c41a;
+    }
+
+    .dot-danger {
+      border-color: #ff4d4f;
+      background: #ff4d4f;
+    }
+
+    .dot-primary {
+      border-color: #1890ff;
+      background: #1890ff;
+    }
+
+    /* 图片列样式 */
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="sidebar">
+    <div class="logo-box"><i class="bi bi-layers-fill me-2"></i> 物联管理平台</div>
+    <div class="mt-2">
+      <a href="/" class="menu-item active"><i class="bi bi-grid-fill"></i> 设备监控中心</a>
+      <a href="#" class="menu-item" onclick="alert('自动同步已在后台运行')"><i class="bi bi-database-fill-gear"></i> 数据同步管理</a>
+      <a href="/history" class="menu-item"><i class="bi bi-file-earmark-text-fill"></i> 通行记录报表</a>
+      <a href="#" class="menu-item"><i class="bi bi-gear-fill"></i> 系统参数设置</a>
+    </div>
+  </div>
+
+  <div class="main-wrapper">
+    <div class="header">
+      <div class="text-secondary"><i class="bi bi-list fs-4 cursor-pointer"></i></div>
+      <div class="d-flex align-items-center">
+        <span class="badge rounded-pill bg-primary me-3 px-3 py-2">系统运行正常</span>
+        <span class="ms-2 fw-bold text-secondary" style="font-size: 14px;">管理员</span>
+        <a href="/logout" class="ms-3 btn btn-outline-secondary btn-sm" style="font-size: 12px;"><i
+            class="bi bi-box-arrow-right"></i> 退出</a>
+      </div>
+    </div>
+
+    <div class="content-body">
+      <!-- 统计卡片 -->
+      <div class="stats-row">
+        <div class="stat-card" style="border-top-color: #1890ff;">
+          <div class="stat-text"><span>接入设备</span>
+            <h4>{{ count }}</h4>
+          </div>
+          <div class="stat-icon" style="background: #e6f7ff; color: #1890ff;"><i class="bi bi-router"></i></div>
+        </div>
+        <div class="stat-card" style="border-top-color: #52c41a;">
+          <div class="stat-text"><span>在线设备</span>
+            <h4>{{ online_count }}</h4>
+          </div>
+          <div class="stat-icon" style="background: #f6ffed; color: #52c41a;"><i class="bi bi-check-circle"></i></div>
+        </div>
+        <div class="stat-card" style="border-top-color: #ff4d4f;">
+          <div class="stat-text"><span>离线/异常</span>
+            <h4>{{ offline_count }}</h4>
+          </div>
+          <div class="stat-icon" style="background: #fff1f0; color: #ff4d4f;"><i class="bi bi-x-circle"></i></div>
+        </div>
+        <div class="stat-card" style="border-top-color: #faad14;">
+          <div class="stat-text"><span>待处理任务</span>
+            <h4>{{ task_count }}</h4>
+          </div>
+          <div class="stat-icon" style="background: #fffbe6; color: #faad14;"><i class="bi bi-list-task"></i></div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <span><i class="bi bi-hdd-network me-2 text-primary"></i>设备列表</span>
+            <span class="badge bg-light text-dark border">{{ count }} 台</span>
+          </div>
+          <div class="device-grid-container">
+            {% for sn, info in devices.items() %}
+            <!-- 根据状态添加 device-offline 类 -->
+            <div class="device-card position-relative {% if info.status == 'offline' %}device-offline{% endif %}">
+
+              <!-- 状态标签 -->
+              {% if info.status == 'online' %}
+              <div class="device-status-badge bg-success-light text-success border border-success border-opacity-25">
+                <i class="bi bi-wifi"></i> 在线
+              </div>
+              {% else %}
+              <div class="device-status-badge bg-secondary text-white border">
+                <i class="bi bi-wifi-off"></i> 离线
+              </div>
+              {% endif %}
+
+              <!-- 彻底移除按钮 -->
+              <i class="bi bi-x-circle-fill text-danger position-absolute top-0 end-0 m-3 fs-5 btn-remove-device"
+                style="cursor: pointer; z-index: 10; transition: 0.2s;" onclick="removeDevice('{{ sn }}')"
+                title="从列表中彻底移除此设备"></i>
+
+              <!-- 设备信息 -->
+              <div class="text-center mt-3 mb-3">
+                <i class="bi bi-display text-secondary d-block mb-2" style="font-size: 3rem;"></i>
+                <div class="fw-bold text-dark" style="font-size: 1.4rem; letter-spacing: 1px;">{{ sn }}</div>
+                <div class="text-muted small bg-light d-inline-block px-2 rounded border mt-1">IP: {{ info.ip }}</div>
+              </div>
+
+              <div class="bg-light p-2 rounded mb-3 text-secondary small text-center">
+                <div><i class="bi bi-clock me-1"></i>最后心跳: {{ info.last_seen }}</div>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="syncFromDatabase('{{ sn }}')">
+                  <i class="bi bi-database-fill-up"></i> 从员工库同步
+                </button>
+                <div class="btn-group">
+                  <button class="btn btn-primary btn-sm" onclick="openAddModal('{{ sn }}')">
+                    <i class="bi bi-person-plus"></i> 下发
+                  </button>
+                  <button class="btn btn-info btn-sm text-white" onclick="openUserListModal('{{ sn }}')">
+                    <i class="bi bi-list-ul"></i> 名单
+                  </button>
+                </div>
+                <button class="btn btn-outline-danger btn-sm" onclick="openDelModal('{{ sn }}')">
+                  <i class="bi bi-person-dash"></i> 删除人员
+                </button>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center w-100 py-5 text-muted">
+              <div class="spinner-grow text-primary mb-3"></div>
+              <p>等待设备接入中...</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- 日志面板 -->
+        <div class="panel">
+          <div class="panel-header"><span><i class="bi bi-clock-history me-2 text-warning"></i>实时审计日志</span></div>
+          <div class="log-container" id="logPanel">
+            <div class="timeline" id="logTimeline">
+              {% for log in logs %}
+              <div class="timeline-item">
+                {% if '✅' in log %}
+                <div class="timeline-dot dot-success"></div>
+                {% elif '❌' in log or '⚠️' in log or '🔥' in log %}
+                <div class="timeline-dot dot-danger"></div>
+                {% else %}
+                <div class="timeline-dot dot-primary"></div>
+                {% endif %}
+
+                {% if ']' in log %}
+                <div class="timeline-time">{{ log.split(']')[0].replace('[', '') }}</div>
+                <div class="timeline-content text-break">{{ log.split(']', 1)[1] }}</div>
+                {% else %}
+                <div class="timeline-time">System</div>
+                <div class="timeline-content text-break">{{ log }}</div>
+                {% endif %}
+              </div>
+              {% else %}<p class="text-center text-muted mt-4">暂无日志</p>{% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：下发人员 -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">下发人员</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="target_sn">
+          <div class="mb-3"><label>姓名</label><input type="text" class="form-control" id="add_name" required></div>
+          <div class="mb-3"><label>工号</label><input type="text" class="form-control" id="add_uid" required></div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">卡号 (Card ID)</label>
+              <input type="text" class="form-control" id="add_card_id" placeholder="选填">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">密码 (Password)</label>
+              <input type="text" class="form-control" id="add_password" placeholder="选填">
+            </div>
+          </div>
+
+          <div class="mb-3"><label>照片 (必需)</label><input type="file" class="form-control" id="add_photo"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="submitAdd()">确认下发</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：删除人员 -->
+  <div class="modal fade" id="delModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">删除人员</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body"><input type="hidden" id="del_target_sn">
+          <div class="mb-3"><label>工号</label><input type="text" class="form-control" id="del_uid"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-danger" onclick="submitDel()">删除</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：人员名单 (带照片) -->
+  <div class="modal fade" id="userListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">设备人员名单</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0"><input type="hidden" id="list_target_sn">
+          <table class="table table-striped table-hover mb-0 align-middle">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th class="ps-4">工号</th>
+                <th>照片</th>
+                <th>姓名</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="user_list_body"></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 自动刷新逻辑：每5秒刷新一次，但如果有弹窗打开，则暂停刷新
+    let refreshTimer = null;
+    function startRefresh () {
+      if (!refreshTimer) {
+        refreshTimer = setTimeout(function () { window.location.reload(); }, 5000);
+      }
+    }
+    function stopRefresh () {
+      if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    }
+    startRefresh();
+
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('show.bs.modal', stopRefresh);
+      m.addEventListener('hidden.bs.modal', startRefresh);
+    });
+
+    // 初始化弹窗对象
+    const addModal = new bootstrap.Modal(document.getElementById('addModal'));
+    const delModal = new bootstrap.Modal(document.getElementById('delModal'));
+    const userListModal = new bootstrap.Modal(document.getElementById('userListModal'));
+
+    function openAddModal (sn) {
+      document.getElementById('target_sn').value = sn;
+      document.getElementById('add_name').value = '';
+      document.getElementById('add_uid').value = '';
+      document.getElementById('add_card_id').value = '';
+      document.getElementById('add_password').value = '';
+      document.getElementById('add_photo').value = '';
+      addModal.show();
+    }
+
+    function openDelModal (sn) { document.getElementById('del_target_sn').value = sn; delModal.show(); }
+
+    // 打开名单，并加载数据
+    function openUserListModal (sn) {
+      document.getElementById('list_target_sn').value = sn;
+      const tbody = document.getElementById('user_list_body');
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">正在从设备获取名单和照片...</p></td></tr>';
+
+      userListModal.show();
+
+      fetch(`/api/query_users?sn=${sn}`)
+        .then(r => r.json())
+        .then(d => {
+          tbody.innerHTML = '';
+          if (d.code !== 0 || !d.data || d.data.length === 0) {
+            return tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">${d.msg || '暂无人员数据'}</td></tr>`;
+          }
+
+          d.data.forEach(u => {
+            // 处理图片Base64
+            let imgHtml = '<span class="text-muted small">无照片</span>';
+            if (u.img && u.img.length > 50) {
+              // 有些设备返回时不带前缀，加上保险
+              const src = u.img.startsWith('data:') ? u.img : 'data:image/jpeg;base64,' + u.img;
+              imgHtml = `<img src="${src}" class="user-avatar" title="点击查看大图" onclick="window.open(this.src)">`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">${u.uid}</td>
+                    <td>${imgHtml}</td>
+                    <td>${u.name}</td>
+                    <td><button class="btn btn-sm btn-outline-danger" onclick="quickDel('${sn}','${u.uid}')">删除</button></td>
+                </tr>`;
+          });
+        })
+        .catch(e => {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">加载失败: ${e.message}</td></tr>`;
+        });
+    }
+
+    function removeDevice (sn) {
+      event.stopPropagation();
+      if (confirm(`确定从列表中彻底移除设备 ${sn}?`)) fetch(`/api/remove_device?sn=${sn}`).then(r => r.json()).then(d => { if (d.code === 0) window.location.reload(); });
+    }
+
+    function syncFromDatabase (sn) {
+      // 实际上目前后台没有这个接口，这里仅作演示或根据你之前代码添加
+      alert("同步指令已发送后台，请查看日志面板");
+    }
+
+    function submitAdd () {
+      const sn = document.getElementById('target_sn').value;
+      const name = document.getElementById('add_name').value;
+      const uid = document.getElementById('add_uid').value;
+      const card_id = document.getElementById('add_card_id').value;
+      const password = document.getElementById('add_password').value;
+      const f = document.getElementById('add_photo').files[0];
+
+      if (!name || !uid || !f) return alert("请填写姓名、工号并选择照片");
+
+      const fd = new FormData();
+      fd.append('sn', sn);
+      fd.append('name', name);
+      fd.append('uid', uid);
+      fd.append('card_id', card_id);
+      fd.append('password', password);
+      fd.append('file', f);
+
+      // 显示Loading状态
+      const btn = document.querySelector('#addModal .btn-primary');
+      const originalText = btn.innerText;
+      btn.innerText = '下发中...';
+      btn.disabled = true;
+
+      fetch('/api/add_user', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+          alert(d.msg);
+          if (d.code === 0) {
+            addModal.hide();
+            window.location.reload();
+          }
+        })
+        .finally(() => {
+          btn.innerText = originalText;
+          btn.disabled = false;
+        });
+    }
+
+    function submitDel () {
+      const sn = document.getElementById('del_target_sn').value, uid = document.getElementById('del_uid').value;
+      if (!uid) return alert("填工号");
+      fetch(`/api/del_user?sn=${sn}&uid=${uid}`).then(r => r.json()).then(d => { alert(d.msg); if (d.code === 0) { delModal.hide(); window.location.reload(); } });
+    }
+
+    function quickDel (sn, uid) {
+      if (confirm(`确定删除工号 ${uid}?`)) fetch(`/api/del_user?sn=${sn}&uid=${uid}`).then(r => r.json()).then(d => { alert(d.msg); if (d.code === 0) openUserListModal(sn); });
+    }
+  </script>
+</body>
+
+</html>

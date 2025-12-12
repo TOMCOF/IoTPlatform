@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全量通行记录报表</title>
+  <!-- 引入 Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .avatar-img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      cursor: zoom-in;
+    }
+
+    .avatar-img:hover {
+      transform: scale(2.5);
+      transition: 0.2s;
+      z-index: 100;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 顶部导航 -->
+  <nav class="navbar navbar-dark bg-dark mb-4 shadow">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand fw-bold" href="/">
+        <i class="bi bi-arrow-left-circle me-2"></i> 返回监控台
+      </a>
+      <span class="navbar-text text-white">通行记录报表</span>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-primary"><i class="bi bi-table me-2"></i>历史通行数据 (最近100条)</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()">
+          <i class="bi bi-arrow-clockwise"></i> 刷新数据
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 table-striped">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">ID</th>
+                <th>抓拍照片</th>
+                <th>人员姓名</th>
+                <th>设备SN</th>
+                <th>通行时间</th>
+                <th>原始数据摘要</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in logs %}
+              <tr>
+                <td class="ps-4 text-muted">#{{ row.id }}</td>
+                <td>
+                  {% if row.img %}
+                  <img src="{{ row.img }}" class="avatar-img shadow-sm" title="点击放大">
+                  {% else %}
+                  <span class="badge bg-secondary rounded-pill fw-normal">无图</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="fw-bold text-dark">{{ row.name }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-info text-dark bg-opacity-25 border border-info">{{ row.sn }}</span>
+                </td>
+                <td class="text-secondary" style="font-family: monospace;">{{ row.time }}</td>
+                <td>
+                  <small class="text-muted d-inline-block text-truncate" style="max-width: 300px;"
+                    title="{{ row.raw }}">
+                    {{ row.raw }}
+                  </small>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                  <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                  暂无历史记录
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-white text-muted small text-center py-3">
+        仅展示最近 100 条记录，更多数据请查询数据库文件 [iot_data.db]
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

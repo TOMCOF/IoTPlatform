@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧物联管理平台</title>
+  <!-- 引入 Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- 引入图标库 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    }
+
+    .avatar-img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+    }
+
+    .op-log-item {
+      font-size: 0.9rem;
+      border-left: 4px solid #ddd;
+    }
+
+    .op-log-item.add {
+      border-left-color: #0d6efd;
+    }
+
+    .op-log-item.del {
+      border-left-color: #dc3545;
+    }
+
+    .modal-header {
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 顶部导航 -->
+  <nav class="navbar navbar-dark navbar-expand-lg mb-4 shadow">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-cpu-fill me-2"></i>IoT 智能设备管理平台
+      </a>
+      <span class="navbar-text text-white-50">
+        <small>V1.0.0 Pro</small>
+      </span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row">
+      <!-- 左侧：设备列表 -->
+      <div class="col-lg-4">
+        <h5 class="mb-3 text-secondary fw-bold">
+          <i class="bi bi-router me-1"></i>在线设备列表
+        </h5>
+
+        {% for sn, info in devices.items() %}
+        <div class="card border-primary border-top border-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="card-title text-primary fw-bold mb-0">
+                <i class="bi bi-hdd-rack me-2"></i>{{ sn }}
+              </h5>
+              <span class="badge bg-success">
+                <i class="bi bi-wifi"></i> 在线
+              </span>
+            </div>
+
+            <div class="bg-light p-2 rounded mb-3 text-secondary small">
+              <div><strong>IP地址:</strong> {{ info.ip }}</div>
+              <div><strong>最后心跳:</strong> {{ info.last_seen }}</div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <!-- 蓝色按钮：下发 -->
+              <button class="btn btn-primary btn-sm" onclick="openAddModal('{{ sn }}')">
+                <i class="bi bi-person-plus-fill"></i> 下发/修改人员
+              </button>
+
+              <!-- 青色按钮：查看名单 -->
+              <button class="btn btn-info btn-sm text-white" onclick="openUserListModal('{{ sn }}')">
+                <i class="bi bi-card-list"></i> 查看设备名单
+              </button>
+
+              <!-- 红色按钮：删除 -->
+              <button class="btn btn-danger btn-sm" onclick="openDelModal('{{ sn }}')">
+                <i class="bi bi-trash-fill"></i> 删除人员
+              </button>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="card bg-warning bg-opacity-10 border-warning">
+          <div class="card-body text-center text-warning-emphasis">
+            <i class="bi bi-exclamation-triangle fs-4"></i>
+            <p class="mb-0 mt-2">暂无设备在线，请等待心跳包...</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- 右侧：数据监控区 -->
+      <div class="col-lg-8">
+        <!-- 实时通行记录 -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="text-secondary fw-bold"><i class="bi bi-camera-video me-1"></i>实时通行监控</h5>
+          <small class="badge bg-secondary">每5秒自动刷新</small>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">抓拍</th>
+                    <th>姓名</th>
+                    <th>设备ID</th>
+                    <th>时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for log in logs %}
+                  <tr>
+                    <td class="ps-4">
+                      {% if log.img %}
+                      <img src="{{ log.img }}" class="avatar-img shadow-sm">
+                      {% else %}
+                      <span class="badge bg-secondary rounded-pill p-2">无图</span>
+                      {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ log.name }}</td>
+                    <td class="text-muted small">{{ log.sn }}</td>
+                    <td class="text-secondary small">{{ log.time }}</td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">暂无通行记录</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <h5 class="text-secondary fw-bold mb-3"><i class="bi bi-journal-text me-1"></i>操作审计日志</h5>
+        <div class="card shadow-sm">
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush" id="op_log_list" style="max-height: 250px; overflow-y: auto;">
+              <li class="list-group-item text-center text-muted py-3">正在加载日志...</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 弹窗区域 ================= -->
+
+  <!-- 弹窗1：下发人员 (带图片上传) -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-person-plus"></i> 下发/修改人员</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="target_sn">
+          <div class="mb-3">
+            <label class="form-label fw-bold">姓名</label>
+            <input type="text" class="form-control" id="add_name" placeholder="例如：奥特曼">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">工号 (唯一ID)</label>
+            <input type="text" class="form-control" id="add_uid" placeholder="例如：1001">
+            <div class="form-text text-muted">如果工号已存在，将覆盖旧信息（相当于修改）。</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">人脸照片</label>
+            <input type="file" class="form-control" id="add_photo" accept="image/*">
+            <div class="form-text text-success">
+              <i class="bi bi-check-circle"></i> 系统会自动将任意图片转码为标准 JPG 格式
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="submitAdd()">确认下发</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗2：删除人员 (单个删除) -->
+  <div class="modal fade" id="delModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger"><i class="bi bi-trash"></i> 删除人员</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="del_target_sn">
+          <div class="mb-3">
+            <label class="form-label fw-bold">要删除的工号 (ID)</label>
+            <input type="text" class="form-control" id="del_uid" placeholder="例如：1001">
+          </div>
+          <div class="alert alert-danger bg-opacity-10 py-2">
+            <small>注意：删除后该人员将无法通行。</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-danger" onclick="submitDel()">确认删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗3：设备人员名单列表 -->
+  <div class="modal fade" id="userListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-info bg-opacity-10">
+          <h5 class="modal-title text-dark"><i class="bi bi-list-ul"></i> 设备人员名单</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <input type="hidden" id="list_target_sn">
+          <table class="table table-striped table-hover mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th class="ps-4">工号</th>
+                <th>姓名</th>
+                <th class="text-end pe-4">操作</th>
+              </tr>
+            </thead>
+            <tbody id="user_list_body">
+              <!-- JS 填充 -->
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer bg-light">
+          <small class="text-muted me-auto">数据直接读取自设备底库</small>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript 逻辑 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // --- 1. 智能刷新逻辑 ---
+    let refreshTimer = null;
+
+    function startRefresh () {
+      console.log("倒计时开始...");
+      refreshTimer = setTimeout(function () { window.location.reload(); }, 5000);
+    }
+
+    function stopRefresh () {
+      console.log("倒计时暂停！");
+      if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    }
+
+    startRefresh(); // 启动
+
+    // 监听所有弹窗：打开时暂停刷新，关闭时恢复刷新
+    document.querySelectorAll('.modal').forEach(modalEl => {
+      modalEl.addEventListener('show.bs.modal', stopRefresh);
+      modalEl.addEventListener('hidden.bs.modal', startRefresh);
+    });
+
+    // --- 2. 弹窗对象初始化 ---
+    const addModal = new bootstrap.Modal(document.getElementById('addModal'));
+    const delModal = new bootstrap.Modal(document.getElementById('delModal'));
+    const userListModal = new bootstrap.Modal(document.getElementById('userListModal'));
+
+    // --- 3. 打开弹窗的函数 ---
+    function openAddModal (sn) {
+      document.getElementById('target_sn').value = sn;
+      addModal.show();
+    }
+
+    function openDelModal (sn) {
+      document.getElementById('del_target_sn').value = sn;
+      delModal.show();
+    }
+
+    function openUserListModal (sn) {
+      document.getElementById('list_target_sn').value = sn;
+      const tbody = document.getElementById('user_list_body');
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border text-primary"></div><div class="mt-2 text-muted">正在读取设备数据...</div></td></tr>';
+
+      userListModal.show();
+
+      // 异步请求查询接口
+      fetch(`/api/query_users?sn=${sn}`)
+        .then(res => res.json())
+        .then(data => {
+          tbody.innerHTML = '';
+          if (data.code !== 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger py-3">${data.msg}</td></tr>`;
+            return;
+          }
+          if (data.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-3 text-muted">设备内暂无人员</td></tr>`;
+            return;
+          }
+
+          // 渲染列表
+          data.data.forEach(user => {
+            tbody.innerHTML += `
+                        <tr>
+                            <td class="ps-4 fw-bold font-monospace">${user.uid}</td>
+                            <td>${user.name}</td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-outline-danger btn-sm" onclick="quickDelete('${sn}', '${user.uid}')">
+                                    <i class="bi bi-trash"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+          });
+        });
+    }
+
+    // --- 4. 提交数据的函数 ---
+
+    // 提交下发（文件上传）
+    function submitAdd () {
+      const sn = document.getElementById('target_sn').value;
+      const name = document.getElementById('add_name').value;
+      const uid = document.getElementById('add_uid').value;
+      const photoInput = document.getElementById('add_photo');
+
+      if (!name || !uid) { alert("请填写完整信息！"); return; }
+      if (photoInput.files.length === 0) { alert("请选择一张照片！"); return; }
+
+      // 使用 FormData 传文件
+      const formData = new FormData();
+      formData.append('sn', sn);
+      formData.append('name', name);
+      formData.append('uid', uid);
+      formData.append('file', photoInput.files[0]);
+
+      // 显示加载状态
+      const btn = document.querySelector('#addModal .btn-primary');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '正在处理...';
+      btn.disabled = true;
+
+      fetch('/api/add_user', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.msg);
+          if (data.code === 0) { addModal.hide(); loadOpLogs(); } // 成功后刷新日志
+        })
+        .catch(err => alert("上传失败：" + err))
+        .finally(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        });
+    }
+
+    // 提交手动输入删除
+    function submitDel () {
+      const sn = document.getElementById('del_target_sn').value;
+      const uid = document.getElementById('del_uid').value;
+      if (!uid) { alert("请填写工号！"); return; }
+
+      performDelete(sn, uid, () => delModal.hide());
+    }
+
+    // 列表里的快速删除
+    function quickDelete (sn, uid) {
+      if (!confirm(`⚠️ 确定要从设备 ${sn} 永久删除工号 [${uid}] 吗？`)) return;
+
+      performDelete(sn, uid, () => openUserListModal(sn)); // 删完刷新列表
+    }
+
+    // 删除的核心逻辑
+    function performDelete (sn, uid, callback) {
+      fetch(`/api/del_user?sn=${sn}&uid=${uid}`)
+        .then(res => res.json())
+        .then(data => {
+          alert(data.msg);
+          if (data.code === 0 && callback) {
+            callback();
+            loadOpLogs(); // 刷新日志
+          }
+        });
+    }
+
+    // --- 5. 加载操作日志 ---
+    function loadOpLogs () {
+      fetch('/api/op_logs')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('op_log_list');
+          list.innerHTML = '';
+          if (data.data.length === 0) {
+            list.innerHTML = '<li class="list-group-item text-center text-muted">暂无操作记录</li>';
+            return;
+          }
+          data.data.forEach(log => {
+            let typeClass = 'text-secondary';
+            let icon = 'bi-info-circle';
+            let borderClass = '';
+
+            if (log.type.includes('下发')) { typeClass = 'text-primary'; icon = 'bi-upload'; borderClass = 'add'; }
+            if (log.type.includes('删除')) { typeClass = 'text-danger'; icon = 'bi-trash'; borderClass = 'del'; }
+            if (log.type.includes('查询')) { typeClass = 'text-info'; icon = 'bi-search'; }
+
+            list.innerHTML += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center op-log-item ${borderClass}">
+                            <div>
+                                <span class="fw-bold ${typeClass} me-2"><i class="bi ${icon}"></i> [${log.type}]</span> 
+                                <span class="text-dark">${log.details}</span>
+                                <small class="text-muted ms-2">@${log.sn}</small>
+                            </div>
+                            <small class="text-secondary" style="font-size:0.8rem">${log.time}</small>
+                        </li>
+                    `;
+          });
+        });
+    }
+
+    // 页面初始化时加载日志
+    loadOpLogs();
+
+  </script>
+
+</body>
+
+</html>
